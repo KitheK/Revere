@@ -1,3 +1,9 @@
+let liveText = '';
+let summaryText = '';
+let currentLanguage = 'en';
+let ttsEnabled = false;
+let keywords = [];
+
 function toggleSettings() {
     const settingsPopup = document.getElementById('settings');
     settingsPopup.style.display = settingsPopup.style.display === 'block' ? 'none' : 'block';
@@ -6,16 +12,29 @@ function toggleSettings() {
 function changeVoice() {
     const voice = document.getElementById('voiceSelect').value;
     console.log(`Voice changed to: ${voice}`);
-    // Implement voice change logic here
-    updateTextToSpeech(voice);
+    // Send voice change to backend
+    fetch('/change_voice', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ voice: voice }),
+    });
 }
 
 function changeLanguage() {
-    const language = document.getElementById('languageSelect').value;
-    console.log(`Language changed to: ${language}`);
-    // Implement language change logic here
-    updateLiveText(language);
-    updateSummaryText(language);
+    currentLanguage = document.getElementById('languageSelect').value;
+    console.log(`Language changed to: ${currentLanguage}`);
+    // Send language change to backend
+    fetch('/change_language', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ language: currentLanguage }),
+    });
+    updateLiveText();
+    updateSummaryText();
 }
 
 function changeFont() {
@@ -32,14 +51,16 @@ function changeFontSize() {
 }
 
 function toggleTTS() {
-    const ttsEnabled = document.getElementById('ttsToggle').checked;
+    ttsEnabled = document.getElementById('ttsToggle').checked;
     console.log(`Text-to-Speech ${ttsEnabled ? 'enabled' : 'disabled'}`);
-    // Implement TTS logic here
-    if (ttsEnabled) {
-        startAudioTranscription();
-    } else {
-        stopAudioTranscription();
-    }
+    // Send TTS toggle to backend
+    fetch('/toggle_tts', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ enabled: ttsEnabled }),
+    });
 }
 
 function toggleDarkMode() {
@@ -47,52 +68,56 @@ function toggleDarkMode() {
 }
 
 function showDefinition(keyword) {
-    const definitions = {
-        keyword1: "This is the definition of keyword 1.",
-        keyword2: "This is the definition of keyword 2."
-    };
-    document.getElementById('definitionText').textContent = definitions[keyword];
-    document.getElementById('definitionPopup').style.display = 'block';
+    fetch(`/get_definition?keyword=${keyword}&language=${currentLanguage}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('definitionText').textContent = data.definition;
+            document.getElementById('definitionPopup').style.display = 'block';
+        });
 }
 
 function closeDefinition() {
     document.getElementById('definitionPopup').style.display = 'none';
 }
 
-let liveText = '';
-let summaryText = '';
-let currentLanguage = 'en';
-
-function updateLiveText(language = currentLanguage) {
-    const liveTextElement = document.getElementById('liveText');
-    if (liveText.length > 3400) {
-        liveText = liveText.slice(3000) + translateText(sentences[0], language) + ' ';
-    } else {
-        liveText += translateText(sentences[0], language) + ' ';
-    }
-    liveTextElement.innerHTML = liveText;
-    sentences.push(sentences.shift());
-
-    // Check if text reached bottom and shift page if necessary
-    if (liveTextElement.scrollHeight > liveTextElement.clientHeight) {
-        window.scrollBy(0, 20); // Adjust this value as needed
-    }
+function updateLiveText() {
+    fetch(`/get_live_text?language=${currentLanguage}`)
+        .then(response => response.json())
+        .then(data => {
+            const liveTextElement = document.getElementById('liveText');
+            liveText = data.text;
+            keywords = data.keywords;
+            liveTextElement.innerHTML = highlightKeywords(liveText);
+            if (liveTextElement.scrollHeight > liveTextElement.clientHeight) {
+                liveTextElement.scrollTop = liveTextElement.scrollHeight;
+            }
+        });
 }
 
-function updateSummaryText(language = currentLanguage) {
-    const summaryTextElement = document.getElementById('summaryText');
-    summaryText += translateText(sentences[0], language) + ' ';
-    summaryTextElement.innerHTML = summaryText;
-    sentences.push(sentences.shift());
+function updateSummaryText() {
+    fetch(`/get_summary?language=${currentLanguage}`)
+        .then(response => response.json())
+        .then(data => {
+            const summaryTextElement = document.getElementById('summaryText');
+            summaryText = data.text;
+            keywords = keywords.concat(data.keywords);
+            summaryTextElement.innerHTML = highlightKeywords(summaryText);
+            summaryTextElement.scrollTop = summaryTextElement.scrollHeight;
+        });
+}
 
-    // Scroll to bottom of summary
-    summaryTextElement.scrollTop = summaryTextElement.scrollHeight;
+function highlightKeywords(text) {
+    keywords.forEach(keyword => {
+        const regex = new RegExp(keyword, 'gi');
+        text = text.replace(regex, `<span class="keyword" onclick="showDefinition('${keyword}')">${keyword}</span>`);
+    });
+    return text;
 }
 
 // Update live translation every 7 seconds
 setInterval(updateLiveText, 7000);
 
-// Update summary every 60 seconds (after a complete cycle of live translation)
+// Update summary every 60 seconds
 setInterval(updateSummaryText, 60000);
 
 // Initialize dark mode

@@ -5,6 +5,9 @@ body {
     margin: 0;
     padding: 0;
     transition: background-color 0.3s ease, color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 .dark-mode {
@@ -55,6 +58,7 @@ header {
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: none;
+    z-index: 10;
 }
 
 .settings-section {
@@ -118,27 +122,21 @@ input:checked + .slider:before {
     transform: translateX(26px);
 }
 
-/* Rounded sliders */
-.slider.round {
-    border-radius: 34px;
-}
-
-.slider.round:before {
-    border-radius: 50%;
-}
-
 .container {
     display: flex;
-    justify-content: space-around;
+    flex: 1;
     padding: 2rem;
 }
 
 .live-translation, .summary {
-    width: 45%;
+    flex: 1;
     background-color: #fff;
     padding: 1rem;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    margin: 0 1rem;
 }
 
 .live-translation h2, .summary h2 {
@@ -149,7 +147,7 @@ input:checked + .slider:before {
     font-size: 1.2rem;
     line-height: 1.6;
     overflow-y: auto;
-    height: 300px;
+    flex: 1;
 }
 
 .definition-popup {
@@ -183,11 +181,16 @@ input:checked + .slider:before {
     background-color: #ddd;
 }
 
+.keyword {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #2196F3;
+}
+
 @media (max-width: 768px) {
     .container {
         flex-direction: column;
     }
-
     .live-translation, .summary {
         width: 100%;
         margin-bottom: 1rem;

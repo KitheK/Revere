@@ -1,122 +1,134 @@
+from flask import Flask, request, jsonify
 import speech_recognition as sr
-from openai import OpenAI
+import openai
 from deep_translator import GoogleTranslator
 import os
 import time
-import playsound
-import threading
+import pygame
+from gtts import gTTS
 
-
-client = OpenAI(api_key="") # Replace with your OpenAI API key
+app = Flask(__name__)
 
 # Initialize the recognizer
 r = sr.Recognizer()
 
-# Global variables for text and language
-liveText = ""
-summaryText = ""
-current_language = "en"
+# OpenAI API key
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
-# Define voices for text-to-speech
-voices = {
-    "alloy": "alloy",
-    "echo": "echo",
-    "shimmer": "shimmer",
-    "onyx": "onyx",
-}
+# Global variables
+current_language = 'en'
+tts_enabled = False
+current_voice = 'alloy'
+live_text = ''
+summary_text = ''
+keywords = []
 
-def getSpeech():
-  """Listens to audio input and returns recognized text."""
-  try:
-    with sr.Microphone() as source2:
-      r.adjust_for_ambient_noise(source2, duration=0.2)
-      print("Listening now")
-      audio = r.listen(source2)
-      MyText = r.recognize_google(audio, language=current_language)
-      MyText = MyText.lower()
-      return MyText
-  except sr.RequestError as e:
-    print("Could not request results; {0}".format(e))
-  except sr.UnknownValueError:
-    print("unknown error occured")
-  return ""
+def get_speech():
+    try:
+        with sr.Microphone() as source:
+            r.adjust_for_ambient_noise(source, duration=0.2)
+            print("Listening now")
+            audio = r.listen(source, timeout=5, phrase_time_limit=5)
+            text = r.recognize_google(audio)
+            return text.lower()
+    except sr.RequestError as e:
+        print(f"Could not request results; {e}")
+    except sr.UnknownValueError:
+        print("Unknown error occurred")
+    return ""
 
-def speakText(command, voice):
-  """Converts text to speech using OpenAI's TTS API."""
-  response = client.audio.speech.create(model="tts-1", voice=voice, input=command)
-  response.write_to_file("output.mp3")
-  time.sleep(1)
-  playsound.playsound('output.mp3', True)
-  os.remove("output.mp3")
+def translate_text(text, target_language):
+    translator = GoogleTranslator(source='auto', target=target_language)
+    return translator.translate(text)
 
-def translateText(text, output_language):
-  """Translates text using Google Translate."""
-  translated = GoogleTranslator(source='en', target=output_language).translate(text=text)
-  return translated
+def generate_summary(text):
+    response = openai.Completion.create(
+        engine="text-davinci-002",
+        prompt=f"Summarize the following text:\n\n{text}",
+        max_tokens=100,
+        n=1,
+        stop=None,
+        temperature=0.5,
+    )
+    return response.choices[0].text.strip()
 
-def updateLiveText():
-  """Updates the live translation text with recognized speech."""
-  global liveText
-  recognized_text = getSpeech()
-  if recognized_text:
-    liveText += recognized_text + " "
-    liveTextElement = document.getElementById('liveText')
-    liveTextElement.innerHTML = liveText
-    # Check if text reached bottom and shift page if necessary
-    if liveTextElement.scrollHeight > liveTextElement.clientHeight:
-      window.scrollBy(0, 20)
+def extract_keywords(text):
+    response = openai.Completion.create(
+        engine="text-davinci-002",
+        prompt=f"Extract important keywords from the following text:\n\n{text}",
+        max_tokens=50,
+        n=1,
+        stop=None,
+        temperature=0.5,
+    )
+    return response.choices[0].text.strip().split(", ")
 
-def updateSummaryText():
-  """Updates the summary text with the translated live text."""
-  global summaryText
-  if liveText:
-    translated_summary = translateText(liveText, current_language)
-    summaryText += translated_summary + " "
-    summaryTextElement = document.getElementById('summaryText')
-    summaryTextElement.innerHTML = summaryText
-    # Scroll to bottom of summary
-    summaryTextElement.scrollTop = summaryTextElement.scrollHeight
-    liveText = ""
+def speak_text(text, language):
+    if tts_enabled:
+        tts = gTTS(text=text, lang=language)
+        tts.save("output.mp3")
+        pygame.mixer.init()
+        pygame.mixer.music.load("output.mp3")
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(10)
+        os.remove("output.mp3")
 
-def startSpeechRecognition():
-  """Starts a separate thread for continuous speech recognition."""
-  threading.Thread(target=updateLiveText).start()
+@app.route('/change_voice', methods=['POST'])
+def change_voice():
+    global current_voice
+    current_voice = request.json['voice']
+    return jsonify({"status": "success"})
 
-def changeLanguage():
-  """Handles language selection and updates the translation and TTS."""
-  global current_language
-  current_language = document.getElementById('languageSelect').value
-  print(f"Language changed to: {current_language}")
+@app.route('/change_language', methods=['POST'])
+def change_language():
+    global current_language
+    current_language = request.json['language']
+    return jsonify({"status": "success"})
 
-def changeVoice():
-  """Handles voice selection for text-to-speech."""
-  selectedVoice = document.getElementById('voiceSelect').value
-  print(f"Voice changed to: {selectedVoice}")
+@app.route('/toggle_tts', methods=['POST'])
+def toggle_tts():
+    global tts_enabled
+    tts_enabled = request.json['enabled']
+    return jsonify({"status": "success"})
 
-def toggleTTS():
-  """Toggles text-to-speech functionality."""
-  ttsEnabled = document.getElementById('ttsToggle').checked
-  print(f"Text-to-Speech {ttsEnabled ? 'enabled' : 'disabled'}")
+@app.route('/get_live_text', methods=['GET'])
+def get_live_text():
+    global live_text, keywords
+    new_text = get_speech()
+    if new_text:
+        live_text += f" {new_text}"
+        translated_text = translate_text(new_text, current_language)
+        keywords.extend(extract_keywords(translated_text))
+        speak_text(translated_text, current_language)
+    return jsonify({"text": translate_text(live_text, current_language), "keywords": keywords})
 
-def toggleDarkMode():
-  """Toggles dark mode."""
-  document.body.classList.toggle('dark-mode')
+@app.route('/get_summary', methods=['GET'])
+def get_summary():
+    global summary_text, keywords
+    summary = generate_summary(live_text)
+    summary_text += f" {summary}"
+    translated_summary = translate_text(summary, current_language)
+    summary_keywords = extract_keywords(translated_summary)
+    keywords.extend(summary_keywords)
+    speak_text(translated_summary, current_language)
+    return jsonify({"text": translated_summary, "keywords": summary_keywords})
 
-def showDefinition(keyword):
-  """Displays a definition popup for a keyword."""
-  # Implement definition logic here based on your keyword database
-  document.getElementById('definitionText').textContent = f"Definition of {keyword}: ... "
-  document.getElementById('definitionPopup').style.display = 'block'
+@app.route('/get_definition', methods=['GET'])
+def get_definition():
+    keyword = request.args.get('keyword')
+    language = request.args.get('language')
+    response = openai.Completion.create(
+        engine="text-davinci-002",
+        prompt=f"Provide a brief definition for the word or phrase '{keyword}' in {language}:",
+        max_tokens=50,
+        n=1,
+        stop=None,
+        temperature=0.5,
+    )
+    definition = response.choices[0].text.strip()
+    translated_definition = translate_text(definition, language)
+    return jsonify({"definition": translated_definition})
 
-def closeDefinition():
-  """Closes the definition popup."""
-  document.getElementById('definitionPopup').style.display = 'none'
-
-# Start speech recognition when the page loads
-startSpeechRecognition()
-
-# Update summary every minute
-setInterval(updateSummaryText, 60000) 
-
-# Initialize dark mode
-document.body.classList.add('dark-mode')
+if __name__ == '__main__':
+    app.run(debug=True)
