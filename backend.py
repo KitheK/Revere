@@ -12,8 +12,8 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
-
-client = OpenAI(api_key="")
+openai_api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI(api_key=openai_api_key)
 
 # Global variables
 audio_queue = queue.Queue()
