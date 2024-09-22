@@ -1,448 +1,88 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Revere</title>
-    <style>
-       body {
-   font-family: Georgia, Arial, sans-serif;
-   margin: 0;
-   padding: 0;
-   background-color: #fff;
-   color: #000;
-   transition: background-color 0.3s, color 0.3s;
-}
-
-
-header {
-   position: fixed;
-   top: 0;
-   right: 0;
-   left: 0;
-   background-color: #333;
-   padding: 10px;
-   display: flex;
-   justify-content: space-between;
-   align-items: center;
-   z-index: 1000;
-}
-
-
-.logo {
-   margin-left: 20px;
-   font-size: 24px;
-   color: #ff7f00;
-}
-
-
-.settings-menu {
-   position: relative;
-}
-
-
-.settings-icon {
-   cursor: pointer;
-   margin-right: 20px;
-   font-size: 24px;
-   color: #ff7f00;
-   background: none;
-   border: none;
-}
-
-
-.settings-popup {
-   display: none;
-   position: absolute;
-   top: 100%;
-   right: 0;
-   background-color: white;
-   border: 1px solid #ccc;
-   z-index: 2000;
-   width: 300px;
-   padding: 20px;
-}
-
-
-.settings-section {
-   margin-bottom: 20px;
-}
-
-
-.settings-section h3 {
-   margin-top: 0;
-   font-size: 14px;
-}
-
-
-.settings-section select {
-   width: 100%;
-   margin-bottom: 10px;
-   font-size: 16px;
-   padding: 5px;
-}
-
-
-.switch {
-   position: relative;
-   display: inline-block;
-   width: 60px;
-   height: 34px;
-}
-
-
-.switch input {
-   opacity: 0;
-   width: 0;
-   height: 0;
-}
-
-
-.slider {
-   position: absolute;
-   cursor: pointer;
-   top: 0;
-   left: 0;
-   right: 0;
-   bottom: 0;
-   background-color: #ccc;
-   transition: .4s;
-}
-
-
-.slider:before {
-   position: absolute;
-   content: "";
-   height: 26px;
-   width: 26px;
-   left: 4px;
-   bottom: 4px;
-   background-color: white;
-   transition: .4s;
-}
-
-
-input:checked + .slider {
-   background-color: #2196F3;
-}
-
-
-input:checked + .slider:before {
-   transform: translateX(26px);
-}
-
-
-.slider.round {
-   border-radius: 34px;
-}
-
-
-.slider.round:before {
-   border-radius: 50%;
-}
-
-
-.container {
-   margin-top: 60px;
-   height: calc(100vh - 60px);
-   display: flex;
-   flex-direction: column;
-}
-
-
-.live-translation, .summary {
-   flex: 1;
-   padding: 20px;
-   border: 1px solid #ccc;
-   margin: 10px;
-   overflow-y: auto;
-}
-
-
-.summary {
-   scroll-behavior: smooth;
-}
-
-
-.keyword {
-   cursor: pointer;
-   text-decoration: underline;
-}
-
-
-body.dark-mode {
-   background-color: #444;
-   color: #fff;
-}
-
-
-body.dark-mode .keyword {
-   color: #ffa500;
-}
-
-
-body.dark-mode .settings-popup,
-body.dark-mode .definition-popup {
-   background-color: #333;
-   color: #fff;
-   border-color: #555;
-}
-
-
-body.dark-mode .settings-popup select {
-   background-color: #444;
-   color: #fff;
-   border-color: #555;
-}
-
-
-.definition-popup {
-   display: none;
-   position: fixed;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   background-color: white;
-   padding: 20px;
-   border: 1px solid #ccc;
-   z-index: 3000;
-}
-
-
-.definition-content {
-   text-align: center;
-}
-
-        .language-select {
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revere</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body class="dark-mode">
-    <header>
-        <div class="logo">Revere</div>
-        <div class="settings-menu">
-            <button class="settings-icon" onclick="toggleSettings()">⚙️</button>
-            <div id="settings" class="settings-popup">
-                <!-- ... (previous settings remain the same) ... -->
-                <div class="settings-section">
-                    <h3>Language</h3>
-                    <select id="languageSelect" onchange="changeLanguage()">
-                        <option value="en">English</option>
-                        <option value="fr">French</option>
-                        <option value="es">Spanish</option>
-                        <option value="pt">Portuguese</option>
-                        <option value="zh-CN">Mandarin</option>
-                        <option value="ru">Russian</option>
-                        <option value="sw">Swahili</option>
-                    </select>
-                </div>
-            </div>
+  <header>
+    <div class="logo">Revere</div>
+    <div class="settings-menu">
+      <button class="settings-icon" onclick="toggleSettings()">⚙️</button>
+      <div id="settings" class="settings-popup">
+        <div class="settings-section">
+          <h3>Voices</h3>
+          <select id="voiceSelect" onchange="changeVoice()">
+            <option value="alloy">Default</option>
+            <option value="echo">Default Male</option>
+            <option value="shimmer">Default Female</option>
+            <option value="onyx">Deep Male</option>
+          </select>
         </div>
-    </header>
-    <div class="container">
-        <div class="live-translation">
-            <h2>Live Translation</h2>
-            <p id="liveText"></p>
+        <div class="settings-section">
+          <h3>Text</h3>
+          <select id="fontSelect" onchange="changeFont()">
+            <option value="Georgia">Georgia</option>
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Courier">Courier</option>
+            <option value="Calibri">Calibri</option>
+          </select>
+          <select id="fontSizeSelect" onchange="changeFontSize()">
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+            <option value="x-large">Extra Large</option>
+            <option value="xx-large">XX Large</option>
+          </select>
         </div>
-        <div class="summary">
-            <h2>Summary</h2>
-            <div id="summaryText"></div>
+        <div class="settings-section">
+          <h3>Text-to-Speech</h3>
+          <label class="switch">
+            <input type="checkbox" id="ttsToggle" onchange="toggleTTS()">
+            <span class="slider round"></span>
+          </label>
         </div>
+        <div class="settings-section">
+          <h3>Display Mode</h3>
+          <label class="switch">
+            <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <div class="settings-section">
+          <h3>Language</h3>
+          <select id="languageSelect" onchange="changeLanguage()">
+            <option value="en">English</option>
+            <option value="fr">French</option>
+            <option value="es">Spanish</option>
+            <option value="pt">Portuguese</option>
+            <option value="zh-CN">Mandarin</option>
+            <option value="ru">Russian</option>
+            <option value="sw">Swahili</option>
+          </select>
+        </div>
+      </div>
     </div>
-    <div id="definitionPopup" class="definition-popup">
-        <div class="definition-content">
-            <span id="definitionText"></span>
-            <button onclick="closeDefinition()">Close</button>
-        </div>
+  </header>
+  <div class="container">
+    <div class="live-translation">
+      <h2>Live Translation</h2>
+      <p id="liveText"></p>
     </div>
-    <script>
-       function toggleSettings() {
-   const settingsPopup = document.getElementById('settings');
-   settingsPopup.style.display = settingsPopup.style.display === 'block' ? 'none' : 'block';
-}
-
-
-function changeVoice() {
-   const voice = document.getElementById('voiceSelect').value;
-   console.log(`Voice changed to: ${voice}`);
-   // Implement voice change logic here
-}
-
-
-function changeFont() {
-   const font = document.getElementById('fontSelect').value;
-   document.body.style.fontFamily = font;
-}
-
-
-function changeFontSize() {
-   const fontSize = document.getElementById('fontSizeSelect').value;
-   document.body.style.fontSize = fontSize === 'small' ? '14px' :
-                                  fontSize === 'medium' ? '16px' :
-                                  fontSize === 'large' ? '18px' :
-                                  fontSize === 'x-large' ? '20px' : '24px';
-}
-
-
-function toggleTTS() {
-   const ttsEnabled = document.getElementById('ttsToggle').checked;
-   console.log(`Text-to-Speech ${ttsEnabled ? 'enabled' : 'disabled'}`);
-   // Implement TTS logic here
-}
-
-
-function toggleDarkMode() {
-   document.body.classList.toggle('dark-mode');
-}
-
-
-function showDefinition(keyword) {
-   const definitions = {
-       keyword1: "This is the definition of keyword 1.",
-       keyword2: "This is the definition of keyword 2."
-   };
-   document.getElementById('definitionText').textContent = definitions[keyword];
-   document.getElementById('definitionPopup').style.display = 'block';
-}
-
-
-function closeDefinition() {
-   document.getElementById('definitionPopup').style.display = 'none';
-}
-
-
-let liveText = '';
-let summaryText = '';
-const sentences = [
-   "This is the first sentence of the live translation.",
-   "Here comes the second sentence with a <span class='keyword' onclick='showDefinition(\"keyword1\")'>keyword</span>.",
-   "The third sentence is now being added to the live translation.",
-   "Sentence number four is making its way into the text.",
-   "Fifth sentence arrives with another <span class='keyword' onclick='showDefinition(\"keyword2\")'>keyword</span>.",
-   "The sixth and final sentence completes this sample text."
-];
-
-
-function updateLiveText() {
-   const liveTextElement = document.getElementById('liveText');
-   if (liveText.length > 3400) {
-       liveText = liveText.slice(3000) + sentences[0] + ' ';
-   } else {
-       liveText += sentences[0] + ' ';
-   }
-   liveTextElement.innerHTML = liveText;
-   sentences.push(sentences.shift());
-
-
-   // Check if text reached bottom and shift page if necessary
-   if (liveTextElement.scrollHeight > liveTextElement.clientHeight) {
-       window.scrollBy(0, 20); // Adjust this value as needed
-   }
-}
-
-
-function updateSummaryText() {
-   const summaryTextElement = document.getElementById('summaryText');
-   summaryText += sentences[0] + ' ';
-   summaryTextElement.innerHTML = summaryText;
-   sentences.push(sentences.shift());
-
-
-   // Scroll to bottom of summary
-   summaryTextElement.scrollTop = summaryTextElement.scrollHeight;
-}
-
-
-// Update live translation every 2 seconds
-setInterval(updateLiveText, 2000);
-
-
-// Update summary every 12 seconds (after a complete cycle of live translation)
-setInterval(updateSummaryText, 12000);
-
-
-// Initialize dark mode
-document.body.classList.add('dark-mode');
-
-
-        let currentLanguage = 'en';
-        let currentVoice = 'alloy';
-
-        function changeLanguage() {
-            currentLanguage = document.getElementById('languageSelect').value;
-            fetch('http://localhost:5000/set_language', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ language: currentLanguage }),
-            });
-        }
-
-        function changeVoice() {
-            const voiceMap = {
-                "default": "alloy",
-                "defaultMale": "echo",
-                "defaultFemale": "shimmer",
-                "deepMale": "onyx"
-            };
-            currentVoice = voiceMap[document.getElementById('voiceSelect').value];
-            fetch('http://localhost:5000/set_voice', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ voice: currentVoice }),
-            });
-        }
-
-        function speakText(text) {
-            fetch('http://localhost:5000/speak_text', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ text: text }),
-            });
-        }
-
-        function updateLiveText() {
-            fetch('http://localhost:5000/get_translation')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.translation) {
-                        const liveTextElement = document.getElementById('liveText');
-                        liveTextElement.innerHTML += data.translation + ' ';
-                        if (document.getElementById('ttsToggle').checked) {
-                            speakText(data.translation);
-                        }
-                    }
-                });
-        }
-
-        function updateSummaryText() {
-            fetch('http://localhost:5000/get_summary')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.summary) {
-                        const summaryTextElement = document.getElementById('summaryText');
-                        summaryTextElement.innerHTML += data.summary + '<br><br>';
-                        summaryTextElement.scrollTop = summaryTextElement.scrollHeight;
-                    }
-                });
-        }
-
-        // Update live translation every 7 seconds
-        setInterval(updateLiveText, 7000);
-
-        // Update summary every 60 seconds
-        setInterval(updateSummaryText, 60000);
-
-        // Initialize dark mode
-        document.body.classList.add('dark-mode');
-    </script>
+    <div class="summary">
+      <h2>Summary</h2>
+      <div id="summaryText"></div>
+    </div>
+  </div>
+  <div id="definitionPopup" class="definition-popup">
+    <div class="definition-content">
+      <span id="definitionText"></span>
+      <button onclick="closeDefinition()">Close</button>
+    </div>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>
-
