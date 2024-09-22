@@ -120,7 +120,7 @@ def get_definition():
     language = request.args.get('language')
     response = openai.Completion.create(
         engine="text-davinci-002",
-        prompt=f"Provide a brief definition for the word or phrase '{keyword}' in {language}:",
+        prompt=f"Provide a brief definition for the word or phrase '{keyword}' in {language} and include a hyperlink to more info:",
         max_tokens=50,
         n=1,
         stop=None,
