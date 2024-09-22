@@ -1,0 +1,25 @@
+name: OpenAI API Integration
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-api-client:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Python script with OpenAI key
+        run: python script.py
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # Pass GitHub secret as environment variable
