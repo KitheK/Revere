@@ -1,6 +1,6 @@
-#Revere: AI-Powered Accessibility
+## Revere: AI-Powered Accessibility
 
-Breaking communication barriers with multilingual Speech-to-Text and Text-to-Speech
+-  Breaking communication barriers with multilingual Speech-to-Text and Text-to-Speech
 
 ## 🏆 About the Project  
 Revere is an AI-powered accessibility tool designed to enhance communication for individuals with speech, hearing, or language barriers. It provides **real-time Speech-to-Text (STT) and Text-to-Speech (TTS)** functionalities in multiple languages, ensuring seamless and inclusive communication.  
