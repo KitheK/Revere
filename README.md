@@ -30,7 +30,7 @@ Revere is an AI-powered accessibility tool designed to enhance communication for
 - Python 3.8+  
 - API key for OpenAI ChatGPT  
 
-#🤝 Current Contributors
+##🤝Current Contributors
 **Marc Oger**
 **Brenden Jones**
 **Kithe Kisia**
